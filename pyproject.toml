@@ -1,0 +1,93 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "canary-scan"
+dynamic = ["version"]
+description = "Scan a document dump for canaries, trackers, web beacons, and per-recipient fingerprints before interacting with the data."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+authors = [
+    { name = "canary-scan contributors" },
+]
+keywords = ["security", "canary", "canarytoken", "tracker", "forensics", "document", "opsec", "watermark", "steganography"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "typer[all]>=0.12",
+    "rich>=13.0",
+    "pyyaml>=6.0",
+    "defusedxml>=0.7",
+    "extract_msg>=0.48",
+    "pyonenote>=0.0.2",
+    "peepdf-3",
+    "liblnk-python",
+    "oletools>=0.60",
+]
+
+[project.optional-dependencies]
+specialized = [
+    "fonttools>=4.50",
+    "pydicom>=2.4",
+    "mutagen>=1.47",
+]
+imaging = [
+    "Pillow>=10.0",
+    "pyzbar>=0.1.9",
+]
+test = [
+    "pytest>=8.0",
+    "reportlab>=4.0",
+    "python-docx>=1.1",
+    "openpyxl>=3.1",
+    "python-pptx>=0.6",
+    "ruff>=0.3.0",
+]
+
+[project.scripts]
+canary-scan = "canary_scan.main:app"
+
+[project.urls]
+Homepage = "https://github.com/psaintelligence/canary-scan"
+Repository = "https://github.com/psaintelligence/canary-scan"
+Documentation = "https://psaintelligence.github.io/canary-scan/"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/canary_scan"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/canary_scan/bundled/VERSIONS.txt" = "canary_scan/bundled/VERSIONS.txt"
+
+[tool.hatch.version]
+path = "src/canary_scan/__init__.py"
+
+[tool.uv]
+exclude-newer = "14 days ago"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+exclude = ["src/canary_scan/bundled/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["E501", "B008", "E701", "UP042", "RUF002", "RUF059", "SIM102", "SIM115", "SIM103"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["canary_scan"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra -q"

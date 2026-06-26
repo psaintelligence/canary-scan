@@ -1,0 +1,13 @@
+# Bundled Third-Party Scripts — Version Provenance
+# canary-scan bundles the following Didier Stevens scripts.
+
+| Script (source)  | Bundled as     | Source | Commit | Version | Fetch date |
+|------------------|----------------|--------|--------|---------|------------|
+| pdfid.py         | pdfid.py       | https://github.com/DidierStevens/DidierStevensSuite.git | 509683b305a669b5a950b48ba65e7d9a5ee194b0 | see file header | 2026-06-26 |
+| pdf-parser.py    | pdf_parser.py  | https://github.com/DidierStevens/DidierStevensSuite.git | 509683b305a669b5a950b48ba65e7d9a5ee194b0 | see file header | 2026-06-26 |
+| rtfdump.py       | rtfdump.py     | https://github.com/DidierStevens/DidierStevensSuite.git | 509683b305a669b5a950b48ba65e7d9a5ee194b0 | see file header | 2026-06-26 |
+
+## Note
+These are verbatim copies from the Didier Stevens Suite repository, with a provenance
+header prepended. File names with hyphens are renamed to underscores for valid Python
+module imports. They are licensed under BSD 2-Clause. See README.md for details.

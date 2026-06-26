@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Wrapper to enforce the correct environment variables for uv and prevent local .venv creation.
+export UV_PROJECT_ENVIRONMENT="${HOME}/.local/venvs/canary-scan"
+export UV_CACHE_DIR="/tmp/.uv-cache-canary-scan"
+export UV_LINK_MODE="copy"
+
+# Execute the actual uv command with all passed arguments
+exec uv "$@"

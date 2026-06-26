@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+.venv
+__pycache__
+canary-scan-out
+.canary-scan
+*.egg-info
+dist
+build
+.pytest_cache
+.ruff_cache
+.agents
+.gemini
