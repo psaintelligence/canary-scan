@@ -1,6 +1,8 @@
 # canary-scan
 
+[![pypi](https://img.shields.io/pypi/v/canary-scan.svg)](https://pypi.org/project/canary-scan/)
 [![python](https://img.shields.io/pypi/pyversions/canary-scan.svg)](https://github.com/psaintelligence/canary-scan/)
+[![build tests](https://github.com/psaintelligence/canary-scan/actions/workflows/project-tests.yml/badge.svg)](https://github.com/psaintelligence/canary-scan/actions/workflows/project-tests.yml)
 [![license](https://img.shields.io/github/license/psaintelligence/canary-scan.svg)](https://github.com/psaintelligence/canary-scan)
 
 **Scan document data-sources for canaries, trackers, web beacons, and per-recipient fingerprints before interacting with supplied datasets.**

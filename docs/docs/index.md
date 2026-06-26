@@ -1,6 +1,8 @@
 # PSA Intelligence Canary Scan 
 
+[![pypi](https://img.shields.io/pypi/v/canary-scan.svg)](https://pypi.org/project/canary-scan/)
 [![python](https://img.shields.io/pypi/pyversions/canary-scan.svg)](https://github.com/psaintelligence/canary-scan/)
+[![build tests](https://github.com/psaintelligence/canary-scan/actions/workflows/project-tests.yml/badge.svg)](https://github.com/psaintelligence/canary-scan/actions/workflows/project-tests.yml)
 [![license](https://img.shields.io/github/license/psaintelligence/canary-scan.svg)](https://github.com/psaintelligence/canary-scan)
 
 <img src="assets/img/canary-scan-logo.png" align="right" width="140" style="margin-left: 20px; margin-bottom: 20px;" alt="canary-scan logo">
