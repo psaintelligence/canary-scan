@@ -7,8 +7,8 @@ name = "canary-scan"
 dynamic = ["version"]
 description = "Scan a document dump for canaries, trackers, web beacons, and per-recipient fingerprints before interacting with the data."
 readme = "README.md"
-license = "Apache-2.0"
-requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
 authors = [
     { name = "canary-scan contributors" },
 ]
@@ -20,7 +20,11 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Security",
     "Topic :: Utilities",
 ]
