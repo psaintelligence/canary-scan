@@ -80,14 +80,14 @@ def _process_record(rec: FileRecord, logger: RunLogger) -> tuple[str, dict | Non
             )
             if pdf_result.returncode == 0 and pdf_result.stdout.strip():
                 stdout = pdf_result.stdout
-                objects = re.split(r'(?m)^obj\s+', stdout)
+                objects = re.split(r"(?m)^obj\s+", stdout)
                 form_fields = []
 
-                val_pattern = r'\s+(?:\((.*?)\)|<([^>]+)>|(\/[A-Za-z0-9_]+)|(\S+))'
-                t_re = re.compile(r'/T' + val_pattern)
-                tu_re = re.compile(r'/TU' + val_pattern)
-                v_re = re.compile(r'/V' + val_pattern)
-                ft_re = re.compile(r'/FT' + val_pattern)
+                val_pattern = r"\s+(?:\((.*?)\)|<([^>]+)>|(\/[A-Za-z0-9_]+)|(\S+))"
+                t_re = re.compile(r"/T" + val_pattern)
+                tu_re = re.compile(r"/TU" + val_pattern)
+                v_re = re.compile(r"/V" + val_pattern)
+                ft_re = re.compile(r"/FT" + val_pattern)
 
                 url_re = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
                 ftp_re = re.compile(r"ftp://[^\s\"'<>]+", re.IGNORECASE)

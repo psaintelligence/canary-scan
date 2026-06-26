@@ -246,6 +246,7 @@ def test_pdf_forms_and_watermarks(tmp_path):
 
     rec = make_rec(pdf_path, Bucket.PDF)
     from canary_scan.lib.runners import RunLogger
+
     logger = RunLogger(tmp_path / "test.log")
 
     findings = c_pdf(rec, logger)
@@ -261,12 +262,13 @@ def test_ooxml_dde_and_header_links(tmp_path):
 
     docx_path = tmp_path / "test_dde_header.docx"
     with zipfile.ZipFile(docx_path, "w") as z:
-        z.writestr("word/document.xml", "<w:instrText> DDEAUTO \"http://tracker.com\" </w:instrText>")
+        z.writestr("word/document.xml", '<w:instrText> DDEAUTO "http://tracker.com" </w:instrText>')
         z.writestr("word/header1.xml", "<w:t>Header link: http://tracker-header.com</w:t>")
         z.writestr("[Content_Types].xml", '<Types><Default Extension="rels" ContentType="a"/></Types>')
 
     rec = make_rec(docx_path, Bucket.OOXML)
     from canary_scan.lib.runners import RunLogger
+
     logger = RunLogger(tmp_path / "test.log")
 
     findings = c_ooxml(rec, logger)
@@ -323,8 +325,11 @@ def test_pdf_in_memory_stream_decompressor(tmp_path):
 
     pdf_path = tmp_path / "test_stream.pdf"
     pdf_path.write_bytes(
-        b"%PDF-1.4\n1 0 obj\n<< /Length " + str(len(compressed)).encode() + b" /Filter /FlateDecode >>\nstream\n"
-        + compressed + b"\nendstream\nendobj\n%%EOF\n"
+        b"%PDF-1.4\n1 0 obj\n<< /Length "
+        + str(len(compressed)).encode()
+        + b" /Filter /FlateDecode >>\nstream\n"
+        + compressed
+        + b"\nendstream\nendobj\n%%EOF\n"
     )
 
     rec = make_rec(pdf_path, Bucket.PDF)

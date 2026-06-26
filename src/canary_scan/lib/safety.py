@@ -51,11 +51,10 @@ def check_readonly_mount(path: str) -> None:
                 f"Path {path!r} is NOT mounted read-only (options: {options}).\n\n"
                 "[yellow]Scanning a writable mount risks accidental data alteration or evidence contamination.[/yellow]\n"
                 "[yellow]Execution continues, but mounting read-only is highly recommended.[/yellow]\n\n"
-                                "[bold white]Remediation Suggestions:[/bold white]\n"
+                "[bold white]Remediation Suggestions:[/bold white]\n"
                 "  [cyan]archivemount -o ro datasource.tar.gz /mnt/datasource[/cyan]\n"
                 "  [cyan]mount -o remount,ro /mnt/datasource[/cyan]",
                 title="[bold red]OPSEC / Integrity Alert[/bold red]",
                 border_style="red",
             )
         )
-

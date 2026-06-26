@@ -22,7 +22,9 @@ def stage(
     stage_name: StageName = typer.Argument(..., help="Stage name to run."),
     datasource: Path = typer.Argument(..., help="Path to the read-only mounted data-source directory."),
     outdir: Path = typer.Option(Path(DEFAULT_OUTDIR), "-o", "--outdir", help="Output directory."),
-    fmt: FormatOption = typer.Option(FormatOption.json, "-f", "--format", help="Final report format (report stage only)."),
+    fmt: FormatOption = typer.Option(
+        FormatOption.json, "-f", "--format", help="Final report format (report stage only)."
+    ),
     stdout: bool = typer.Option(False, "--stdout", help="Emit JSONL to stdout (report stage only)."),
     severity_threshold: SeverityThreshold = typer.Option(SeverityThreshold.info, "--severity-threshold"),
     workers: int = typer.Option(DEFAULT_WORKERS, "--workers"),

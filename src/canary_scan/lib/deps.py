@@ -29,6 +29,7 @@ def get_local_manager() -> tuple[str, str]:
     Returns (manager, manager_type). Default to ('apt', 'apt') if none detected.
     """
     import shutil
+
     if shutil.which("apt-get") or shutil.which("apt-cache"):
         return "apt", "apt"
     if shutil.which("dnf"):
@@ -46,6 +47,7 @@ def resolve_install_hint(install_hint: str) -> str:
     system_tags = {"apt|rpm|apk", "apt|rpm", "apt", "rpm", "apk"}
     if tag in system_tags:
         from canary_scan.lib.config import PACKAGE_MAPPINGS
+
         manager, mgr_type = get_local_manager()
         if val in PACKAGE_MAPPINGS:
             resolved = PACKAGE_MAPPINGS[val].get(mgr_type, val)
@@ -78,6 +80,7 @@ def check_dependencies(enable_specialized: bool = False, strict: bool = False) -
         if tier == "bundled":
             try:
                 import importlib.util
+
                 module_name = f"canary_scan.bundled.{binary.replace('.py', '').replace('-', '_')}"
                 if importlib.util.find_spec(module_name) is not None:
                     is_found = True
@@ -90,13 +93,16 @@ def check_dependencies(enable_specialized: bool = False, strict: bool = False) -
             if module_name:
                 try:
                     import importlib.util
+
                     if importlib.util.find_spec(module_name) is not None:
                         is_found = True
                 except (ImportError, ValueError):
                     pass
 
         resolved_hint = resolve_install_hint(install_hint)
-        status = DepStatus(name=name, tier=tier, install_hint=resolved_hint, binary=binary, found=is_found, purpose=purpose)
+        status = DepStatus(
+            name=name, tier=tier, install_hint=resolved_hint, binary=binary, found=is_found, purpose=purpose
+        )
         if status.found:
             found.append(status)
         else:
@@ -111,6 +117,7 @@ def check_dependencies(enable_specialized: bool = False, strict: bool = False) -
 def format_hint_rich(install_hint: str) -> str:
     """Format install hint for Rich Console with color-differentiated tag at the end."""
     from rich.markup import escape
+
     tag, val = parse_hint(install_hint)
     if tag == "other":
         return escape(install_hint)
@@ -150,11 +157,27 @@ def format_dep_table(status: dict[str, list[DepStatus]]) -> Table:
         return "[dim]optional[/dim]"
 
     for s in status["found"]:
-        table.add_row(s.name, format_tier(s.tier), s.binary, s.purpose, "[green]OK[/green]", format_hint_rich(s.install_hint))
+        table.add_row(
+            s.name, format_tier(s.tier), s.binary, s.purpose, "[green]OK[/green]", format_hint_rich(s.install_hint)
+        )
     for s in status["missing_required"]:
-        table.add_row(s.name, format_tier(s.tier), s.binary, s.purpose, "[bold red]MISSING[/bold red]", format_hint_rich(s.install_hint))
+        table.add_row(
+            s.name,
+            format_tier(s.tier),
+            s.binary,
+            s.purpose,
+            "[bold red]MISSING[/bold red]",
+            format_hint_rich(s.install_hint),
+        )
     for s in status["missing_optional"]:
-        table.add_row(s.name, format_tier(s.tier), s.binary, s.purpose, "[yellow]missing[/yellow]", format_hint_rich(s.install_hint))
+        table.add_row(
+            s.name,
+            format_tier(s.tier),
+            s.binary,
+            s.purpose,
+            "[yellow]missing[/yellow]",
+            format_hint_rich(s.install_hint),
+        )
     return table
 
 

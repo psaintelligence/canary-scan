@@ -81,7 +81,10 @@ def test_encrypted_zip_detection(tmp_path):
 def test_ooxml_content_type_injection(tmp_path):
     docx_path = tmp_path / "injection.docx"
     with zipfile.ZipFile(docx_path, "w") as z:
-        z.writestr("[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8"?><Types><Type Target="http://tracker.com/pixel.png"/></Types>')
+        z.writestr(
+            "[Content_Types].xml",
+            '<?xml version="1.0" encoding="UTF-8"?><Types><Type Target="http://tracker.com/pixel.png"/></Types>',
+        )
 
     rec = make_rec(docx_path, Bucket.OOXML)
     logger = RunLogger(tmp_path / "test.log")
@@ -116,11 +119,11 @@ def test_mhtml_parser(tmp_path):
     mhtml_path = tmp_path / "test.mhtml"
     mhtml_content = (
         "MIME-Version: 1.0\n"
-        "Content-Type: multipart/related; boundary=\"boundary-1\"\n\n"
+        'Content-Type: multipart/related; boundary="boundary-1"\n\n'
         "--boundary-1\n"
         "Content-Type: text/html\n"
         "Content-Location: http://tracker-location.com/main.html\n\n"
-        "<html><body><img src=\"http://tracker.com/pixel.gif\" width=\"1\" height=\"1\"></body></html>\n"
+        '<html><body><img src="http://tracker.com/pixel.gif" width="1" height="1"></body></html>\n'
         "--boundary-1--\n"
     )
     mhtml_path.write_text(mhtml_content, encoding="utf-8")
@@ -152,6 +155,7 @@ def test_pdf_pixel_diffing(tmp_path):
     from canary_scan.lib.runners import subprocess
 
     original_run = subprocess.run
+
     def mock_run(args, **kwargs):
         if "qpdf" in args:
             out_file = args[-1]
@@ -261,6 +265,7 @@ def test_pdf_form_field_metadata_extraction(tmp_path):
     logger = RunLogger(tmp_path / "test.log")
 
     from canary_scan.lib.runners import subprocess
+
     original_run = subprocess.run
 
     def mock_run(args, **kwargs):
@@ -287,7 +292,6 @@ def test_pdf_form_field_metadata_extraction(tmp_path):
     assert "pdf_form_tooltip" in active_urls[0].subcategory
 
 
-
 def test_pdf_form_field_uniqueness(tmp_path):
     from canary_scan.scanners.uniqueness import _diff_pdfs
 
@@ -297,21 +301,14 @@ def test_pdf_form_field_uniqueness(tmp_path):
     pdf2.sha256 = "222222222222"
 
     metadata = {
-        str(pdf1.path): {
-            "FormFields": [
-                {"obj": "6 0", "ft": "/Tx", "t": "tx1", "tu": "tool1", "v": "value1"}
-            ]
-        },
-        str(pdf2.path): {
-            "FormFields": [
-                {"obj": "6 0", "ft": "/Tx", "t": "tx1", "tu": "tool1", "v": "value2"}
-            ]
-        }
+        str(pdf1.path): {"FormFields": [{"obj": "6 0", "ft": "/Tx", "t": "tx1", "tu": "tool1", "v": "value1"}]},
+        str(pdf2.path): {"FormFields": [{"obj": "6 0", "ft": "/Tx", "t": "tx1", "tu": "tool1", "v": "value2"}]},
     }
 
     logger = RunLogger(tmp_path / "test.log")
 
     from canary_scan.lib.runners import subprocess
+
     original_run = subprocess.run
 
     def mock_run(args, **kwargs):
@@ -330,4 +327,3 @@ def test_pdf_form_field_uniqueness(tmp_path):
     assert len(form_diffs) == 1
     assert "value1" in form_diffs[0].evidence
     assert "value2" in form_diffs[0].evidence
-

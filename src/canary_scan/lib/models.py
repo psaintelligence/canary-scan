@@ -83,7 +83,18 @@ class Finding:
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> Finding:
-        for field_name in ("file", "sha256", "file_type", "bucket", "stage", "category", "subcategory", "finding", "evidence", "tool"):
+        for field_name in (
+            "file",
+            "sha256",
+            "file_type",
+            "bucket",
+            "stage",
+            "category",
+            "subcategory",
+            "finding",
+            "evidence",
+            "tool",
+        ):
             if field_name not in d:
                 raise TypeError(f"Missing required field in Finding dictionary: {field_name}")
         return cls(

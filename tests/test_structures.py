@@ -1,4 +1,3 @@
-
 import pytest
 
 from canary_scan.lib.config import Bucket

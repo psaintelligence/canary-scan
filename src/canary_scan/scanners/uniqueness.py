@@ -46,6 +46,7 @@ def _process_cluster(
     except Exception as e:
         logger.log(f"Stage uniqueness: error on cluster {cluster_id}: {e}")
         from canary_scan.lib.models import make_info_finding
+
         for rec in members:
             findings.append(make_info_finding(rec, "uniqueness", f"uniqueness stage error: {e}"))
     return findings
@@ -162,7 +163,9 @@ def _find_fingerprint_diffs(
     return diffs
 
 
-def _diff_pdfs(members: list[FileRecord], outdir: Path, logger: RunLogger, metadata: dict[str, dict] | None = None) -> list[Diff]:
+def _diff_pdfs(
+    members: list[FileRecord], outdir: Path, logger: RunLogger, metadata: dict[str, dict] | None = None
+) -> list[Diff]:
     diffs: list[Diff] = []
     if len(members) < 2:
         return diffs
@@ -276,6 +279,7 @@ def _diff_pdfs(members: list[FileRecord], outdir: Path, logger: RunLogger, metad
             for p in png_paths:
                 if p.exists():
                     import contextlib
+
                     with contextlib.suppress(OSError):
                         p.unlink()
     return diffs
@@ -294,6 +298,7 @@ def _diff_text(members: list[FileRecord]) -> list[Diff]:
             contents.append("")
     hashes = {hashlib.sha256(c.encode()).hexdigest() for c in contents}
     if len(hashes) > 1:
+
         def canonicalize(text: str) -> str:
             text = text.lstrip("\ufeff")
             text = text.replace("\r\n", "\n").replace("\r", "\n")

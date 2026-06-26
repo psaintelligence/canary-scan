@@ -40,9 +40,7 @@ def test_custom_allowlist(tmp_path):
         "domains": ["safe-domain.com"],
         "urls": ["http://another-safe.com/pixel.gif"],
         "files": ["/path/to/safe.pdf"],
-        "metadata": {
-            "creator": ["safe-creator-tool"]
-        }
+        "metadata": {"creator": ["safe-creator-tool"]},
     }
     allowlist_file.write_text(json.dumps(rules))
 
@@ -132,10 +130,7 @@ def test_custom_allowlist(tmp_path):
 
 def test_custom_denylist(tmp_path):
     denylist_file = tmp_path / "denylist.json"
-    rules = {
-        "domains": ["malicious-domain.com"],
-        "urls": ["http://bad-url.com/tracker.gif"]
-    }
+    rules = {"domains": ["malicious-domain.com"], "urls": ["http://bad-url.com/tracker.gif"]}
     denylist_file.write_text(json.dumps(rules))
 
     findings = [
@@ -220,10 +215,10 @@ def test_heuristics_rare_vs_ubiquitous():
     # Sort order will put critical unique first
     assert evaluated[0].evidence == "http://unique-tracker.com/pixel"
     assert evaluated[0].severity == "critical"
-    assert evaluated[0].confidence == 0.9 # 0.8 + 0.1
+    assert evaluated[0].confidence == 0.9  # 0.8 + 0.1
 
     # Ubiquitous ones should be downgraded to medium
     ubiquitous = [f for f in evaluated if f.evidence == "http://common-shared-asset.com/img.png"]
     assert len(ubiquitous) == 10
     assert all(f.severity == "medium" for f in ubiquitous)
-    assert all(f.confidence == 0.8 for f in ubiquitous) # 0.9 - 0.1
+    assert all(f.confidence == 0.8 for f in ubiquitous)  # 0.9 - 0.1

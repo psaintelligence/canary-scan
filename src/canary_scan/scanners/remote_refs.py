@@ -226,7 +226,7 @@ def c_pdf(rec: FileRecord, logger: RunLogger) -> list[Finding]:
             )
 
     # In-memory stream extraction & raw bytes URL scan
-    PDF_STREAM_RE = re.compile(rb'stream[\r\n\s]+(.*?)[\r\n\s]+endstream', re.DOTALL)
+    PDF_STREAM_RE = re.compile(rb"stream[\r\n\s]+(.*?)[\r\n\s]+endstream", re.DOTALL)
     if raw_bytes:
         # Find streams and decompress
         for m in PDF_STREAM_RE.finditer(raw_bytes):
@@ -574,7 +574,9 @@ def c_ooxml(rec: FileRecord, logger: RunLogger) -> list[Finding]:
                 elif "customxml" in name.lower():
                     findings.extend(_scan_raw_text(rec, data, "unzip+rg", "customxml", Severity.MEDIUM, 0.6))
                 else:
-                    findings.extend(_scan_raw_text(rec, data, "unzip+rg", f"zip_member_{name.split('/')[-1]}", Severity.HIGH, 0.7))
+                    findings.extend(
+                        _scan_raw_text(rec, data, "unzip+rg", f"zip_member_{name.split('/')[-1]}", Severity.HIGH, 0.7)
+                    )
 
     except Exception as e:
         err_msg = str(e).lower()
@@ -595,6 +597,7 @@ def c_ooxml(rec: FileRecord, logger: RunLogger) -> list[Finding]:
             return findings
         logger.log(f"Stage remote-refs: ZIP error on {rec.path}: {e}")
     return findings
+
 
 def c_odf(rec: FileRecord, logger: RunLogger) -> list[Finding]:
     findings: list[Finding] = []
@@ -780,7 +783,9 @@ def c_html(rec: FileRecord, logger: RunLogger) -> list[Finding]:
             for part in msg.walk():
                 for p_hdr, p_val in part.items():
                     if p_hdr.lower() == "content-location":
-                        findings.extend(_scan_raw_text(rec, p_val, "mhtml", "part_content_location", Severity.HIGH, 0.8))
+                        findings.extend(
+                            _scan_raw_text(rec, p_val, "mhtml", "part_content_location", Severity.HIGH, 0.8)
+                        )
                 body = part.get_payload(decode=True)
                 if body:
                     body_text = body.decode("utf-8", errors="replace")
@@ -1034,7 +1039,9 @@ def c_image(rec: FileRecord, logger: RunLogger) -> list[Finding]:
                                     f"SVG external href: {attr_val}",
                                     attr_val,
                                     "xml",
-                                    Severity.CRITICAL if "script" in elem.tag.lower() or UNC_RE.match(attr_val) else Severity.HIGH,
+                                    Severity.CRITICAL
+                                    if "script" in elem.tag.lower() or UNC_RE.match(attr_val)
+                                    else Severity.HIGH,
                                     0.8,
                                 )
                             )
@@ -1096,7 +1103,9 @@ def c_csv(rec: FileRecord) -> list[Finding]:
                                     0.8,
                                 )
                             )
-                            findings.extend(_scan_raw_text(rec, cell, "canary-scan", "csv_formula_url", Severity.CRITICAL, 0.9))
+                            findings.extend(
+                                _scan_raw_text(rec, cell, "canary-scan", "csv_formula_url", Severity.CRITICAL, 0.9)
+                            )
     except (OSError, csv.Error):
         pass
     return findings
@@ -1366,6 +1375,7 @@ def c_lnk(rec: FileRecord, logger: RunLogger) -> list[Finding]:
     findings: list[Finding] = []
     try:
         import pylnk
+
         lnk = pylnk.open(rec.path)
 
         local_path = getattr(lnk, "local_path", None)

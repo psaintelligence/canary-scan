@@ -33,6 +33,7 @@ def test_pdf_signature_detection(tmp_path):
 
     # We mock pdf_parser subprocess run to return /Sig
     from canary_scan.lib.runners import subprocess
+
     original_run = subprocess.run
 
     def mock_run(args, **kwargs):
@@ -61,10 +62,10 @@ def test_ooxml_printer_metadata(tmp_path):
             '<?xml version="1.0" encoding="UTF-8"?>\n'
             '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" '
             'xmlns:dc="http://purl.org/dc/elements/1.1/">\n'
-            '  <dc:creator>Alice Smith</dc:creator>\n'
-            '  <cp:lastModifiedBy>Bob Jones</cp:lastModifiedBy>\n'
-            '  <cp:lastPrinted>2026-06-25T12:00:00Z</cp:lastPrinted>\n'
-            '</cp:coreProperties>'
+            "  <dc:creator>Alice Smith</dc:creator>\n"
+            "  <cp:lastModifiedBy>Bob Jones</cp:lastModifiedBy>\n"
+            "  <cp:lastPrinted>2026-06-25T12:00:00Z</cp:lastPrinted>\n"
+            "</cp:coreProperties>"
         )
         z.writestr("docProps/core.xml", core_content)
         z.writestr("word/printerSettings/printerSettings1.bin", "dummy printer bytes")
@@ -112,7 +113,7 @@ def test_canonicalization_fingerprint(tmp_path):
 
     # Write identical text but with line ending and spacing anomalies
     f1.write_bytes(b"Hello World\r\nLine 2 \r\n")
-    f2.write_bytes(b"\xef\xbb\xbfHello World\nLine 2\n") # With BOM and normalized newlines/no trailing spaces
+    f2.write_bytes(b"\xef\xbb\xbfHello World\nLine 2\n")  # With BOM and normalized newlines/no trailing spaces
 
     rec1 = make_rec(f1, Bucket.OTHER)
     rec2 = make_rec(f2, Bucket.OTHER)
@@ -138,7 +139,7 @@ def test_macro_fingerprint(tmp_path):
         "VBA code:\n"
         "Sub AutoOpen()\n"
         "  Dim user As String\n"
-        "  user = Environ(\"UserName\")\n"
+        '  user = Environ("UserName")\n'
         "  Dim host As String\n"
         "  host = WScript.Network.ComputerName\n"
         "End Sub\n"
@@ -157,6 +158,7 @@ def test_macro_fingerprint(tmp_path):
 def test_qr_code_url_detection(tmp_path):
     img_path = tmp_path / "image.png"
     from PIL import Image
+
     img = Image.new("RGB", (10, 10), color="white")
     img.save(img_path)
 
@@ -168,6 +170,7 @@ def test_qr_code_url_detection(tmp_path):
     mock_qr.data = b"Scan me! http://callback-tracker.com/target"
 
     import sys
+
     mock_pyzbar = MagicMock()
     mock_pyzbar_decode = MagicMock(return_value=[mock_qr])
     mock_pyzbar.decode = mock_pyzbar_decode

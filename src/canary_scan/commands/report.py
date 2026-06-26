@@ -137,6 +137,7 @@ def print_report_summary(findings: list[Finding], outdir: Path, counts: dict[str
 
     # Group findings by (severity, category)
     from collections import Counter
+
     group_counts = Counter((f.severity, f.category) for f in findings)
 
     # Sort groups by severity rank (critical down to info), then category
@@ -150,12 +151,7 @@ def print_report_summary(findings: list[Finding], outdir: Path, counts: dict[str
     for (sev, cat), count in sorted_groups:
         color = severity_colors.get(sev, "white")
         desc = CATEGORY_INFO.get(cat, "")
-        table.add_row(
-            f"[{color}]{sev.upper()}[/{color}]",
-            cat,
-            desc,
-            str(count)
-        )
+        table.add_row(f"[{color}]{sev.upper()}[/{color}]", cat, desc, str(count))
 
     console.print(table)
     console.print()

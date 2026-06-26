@@ -199,7 +199,12 @@ DEPS: dict[str, tuple[str, str, str, str]] = {
     "extract_msg": ("optional", "[pip] extract_msg", "extract_msg", "Parse Outlook .msg email files"),
     "python-liblnk": ("optional", "[pip] python-liblnk", "python-liblnk", "Parse Windows shortcut (.lnk) files"),
     "pdfid": ("bundled", "[bundled] pdfid.py", "pdfid.py", "Scan PDF files for active elements and keywords"),
-    "pdf-parser": ("bundled", "[bundled] pdf_parser.py", "pdf_parser.py", "Extract objects and analyze PDF file structure"),
+    "pdf-parser": (
+        "bundled",
+        "[bundled] pdf_parser.py",
+        "pdf_parser.py",
+        "Extract objects and analyze PDF file structure",
+    ),
     "rtfdump": ("bundled", "[bundled] rtfdump.py", "rtfdump.py", "Analyze and dump elements of RTF files"),
 }
 
@@ -215,90 +220,25 @@ PACKAGE_MAPPINGS = {
     "libimage-exiftool-perl": {
         "apt": "libimage-exiftool-perl",
         "rpm": "perl-Image-ExifTool",
-        "apk": "perl-image-exiftool"
+        "apk": "perl-image-exiftool",
     },
-    "qpdf": {
-        "apt": "qpdf",
-        "rpm": "qpdf",
-        "apk": "qpdf"
-    },
-    "poppler-utils": {
-        "apt": "poppler-utils",
-        "rpm": "poppler-utils",
-        "apk": "poppler-utils"
-    },
-    "mupdf-tools": {
-        "apt": "mupdf-tools",
-        "rpm": "mupdf",
-        "apk": "mupdf"
-    },
-    "ripgrep": {
-        "apt": "ripgrep",
-        "rpm": "ripgrep",
-        "apk": "ripgrep"
-    },
-    "unzip": {
-        "apt": "unzip",
-        "rpm": "unzip",
-        "apk": "unzip"
-    },
-    "p7zip-full": {
-        "apt": "p7zip-full",
-        "rpm": "7zip",
-        "apk": "7zip"
-    },
-    "unrar": {
-        "apt": "unrar",
-        "rpm": "unrar",
-        "apk": "[build] build from source"
-    },
-    "imagemagick": {
-        "apt": "imagemagick",
-        "rpm": "ImageMagick",
-        "apk": "imagemagick"
-    },
-    "steghide": {
-        "apt": "steghide",
-        "rpm": "steghide",
-        "apk": "[build] build from source"
-    },
-    "stegseek": {
-        "apt": "stegseek",
-        "rpm": "[github] github release",
-        "apk": "[github] github release"
-    },
-    "pngcheck": {
-        "apt": "pngcheck",
-        "rpm": "pngcheck",
-        "apk": "[build] build from source"
-    },
-    "jq": {
-        "apt": "jq",
-        "rpm": "jq",
-        "apk": "jq"
-    },
-    "python3-fonttools": {
-        "apt": "python3-fonttools",
-        "rpm": "python3-fonttools",
-        "apk": "py3-fonttools"
-    },
-    "python3-pydicom": {
-        "apt": "python3-pydicom",
-        "rpm": "python3-pydicom",
-        "apk": "py3-pydicom"
-    },
-    "python3-mutagen": {
-        "apt": "python3-mutagen",
-        "rpm": "python3-mutagen",
-        "apk": "py3-mutagen"
-    },
-    "ffmpeg": {
-        "apt": "ffmpeg",
-        "rpm": "ffmpeg-free",
-        "apk": "ffmpeg"
-    }
+    "qpdf": {"apt": "qpdf", "rpm": "qpdf", "apk": "qpdf"},
+    "poppler-utils": {"apt": "poppler-utils", "rpm": "poppler-utils", "apk": "poppler-utils"},
+    "mupdf-tools": {"apt": "mupdf-tools", "rpm": "mupdf", "apk": "mupdf"},
+    "ripgrep": {"apt": "ripgrep", "rpm": "ripgrep", "apk": "ripgrep"},
+    "unzip": {"apt": "unzip", "rpm": "unzip", "apk": "unzip"},
+    "p7zip-full": {"apt": "p7zip-full", "rpm": "7zip", "apk": "7zip"},
+    "unrar": {"apt": "unrar", "rpm": "unrar", "apk": "[build] build from source"},
+    "imagemagick": {"apt": "imagemagick", "rpm": "ImageMagick", "apk": "imagemagick"},
+    "steghide": {"apt": "steghide", "rpm": "steghide", "apk": "[build] build from source"},
+    "stegseek": {"apt": "stegseek", "rpm": "[github] github release", "apk": "[github] github release"},
+    "pngcheck": {"apt": "pngcheck", "rpm": "pngcheck", "apk": "[build] build from source"},
+    "jq": {"apt": "jq", "rpm": "jq", "apk": "jq"},
+    "python3-fonttools": {"apt": "python3-fonttools", "rpm": "python3-fonttools", "apk": "py3-fonttools"},
+    "python3-pydicom": {"apt": "python3-pydicom", "rpm": "python3-pydicom", "apk": "py3-pydicom"},
+    "python3-mutagen": {"apt": "python3-mutagen", "rpm": "python3-mutagen", "apk": "py3-mutagen"},
+    "ffmpeg": {"apt": "ffmpeg", "rpm": "ffmpeg-free", "apk": "ffmpeg"},
 }
-
 
 
 SARIF_LEVEL_MAP = {

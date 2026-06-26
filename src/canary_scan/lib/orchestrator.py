@@ -70,6 +70,7 @@ class StageRegistry:
             stage_cls.artefact = STAGE_ARTEFACTS.get(name, "")
             cls._stages[name] = stage_cls
             return stage_cls
+
         return decorator
 
     @classmethod

@@ -50,18 +50,29 @@ def test_fix_hints():
 
     status = {
         "missing_required": [
-            DepStatus(name="exiftool", tier="required", install_hint="[apt|rpm|apk] libimage-exiftool-perl", binary="exiftool", found=False, purpose="Metadata extraction"),
+            DepStatus(
+                name="exiftool",
+                tier="required",
+                install_hint="[apt|rpm|apk] libimage-exiftool-perl",
+                binary="exiftool",
+                found=False,
+                purpose="Metadata extraction",
+            ),
         ],
         "missing_optional": [
-            DepStatus(name="peepdf", tier="optional", install_hint="[pip] peepdf", binary="peepdf", found=False, purpose="Deep PDF analysis"),
-        ]
+            DepStatus(
+                name="peepdf",
+                tier="optional",
+                install_hint="[pip] peepdf",
+                binary="peepdf",
+                found=False,
+                purpose="Deep PDF analysis",
+            ),
+        ],
     }
 
     res = fix_hints(status)
-    expected = (
-        "sudo apt install libimage-exiftool-perl\n"
-        "pip install peepdf"
-    )
+    expected = "sudo apt install libimage-exiftool-perl\npip install peepdf"
     assert res == expected
 
 
@@ -94,5 +105,3 @@ def test_resolve_install_hint():
         assert resolve_install_hint("[apt|rpm|apk] libimage-exiftool-perl") == "[apk] perl-image-exiftool"
         assert resolve_install_hint("[apt|rpm|apk] python3-mutagen") == "[apk] py3-mutagen"
         assert resolve_install_hint("[apt|rpm|apk] unrar") == "[build] build from source"
-
-
