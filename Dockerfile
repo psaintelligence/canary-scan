@@ -3,7 +3,7 @@
 # ==============================================================================
 # STAGE 1: Builder (Python build environment with uv)
 # ==============================================================================
-FROM python:3.14-slim-bookworm AS builder
+FROM python:3.13-slim-bookworm AS builder
 
 # Copy uv from official image
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
@@ -25,7 +25,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # ==============================================================================
 # STAGE 2: Runtime (final production image)
 # ==============================================================================
-FROM python:3.14-slim-bookworm AS runtime
+FROM python:3.13-slim-bookworm AS runtime
 
 # Enable non-free packages in sources list to install unrar
 RUN sed -i 's/Components: main/Components: main contrib non-free/g' /etc/apt/sources.list.d/debian.sources
