@@ -67,12 +67,20 @@ def check_dependencies(enable_specialized: bool = False, strict: bool = False) -
     if enable_specialized:
         all_deps.update(SPECIALIZED_DEPS)
 
+    # Map dep name (as listed in DEPS / SPECIALIZED_DEPS) to the importable
+    # Python module that provides it. This is the fallback when the dep's
+    # console-script is not on PATH — which happens under pipx, where only
+    # the main app's entry points are symlinked onto PATH, not dependency
+    # console scripts (e.g. olevba/oleobj/rtfobj from oletools).
     python_modules = {
         "python-liblnk": "pylnk",
         "extract_msg": "extract_msg",
         "peepdf": "peepdf",
         "pyOneNote": "pyOneNote",
         "oletools": "oletools",
+        "olevba": "oletools",
+        "oleobj": "oletools",
+        "rtfobj": "oletools",
     }
 
     for name, (tier, install_hint, binary, purpose) in all_deps.items():

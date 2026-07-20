@@ -58,6 +58,16 @@ Each stage writes a JSONL artefact to `.canary-scan/`. Run `canary-scan --guide`
 
 ---
 
+## Supply-chain safety
+
+`canary-scan` pins third-party Python dependencies to releases no newer than 14 days via `uv`'s
+`exclude-newer` setting in `pyproject.toml`. This bounds the window during which a compromised
+upstream package could enter the resolved lockfile. The Didier Stevens bundled scripts are pinned
+at build time via `make vendor`; their provenance (commit SHA + version + date) is recorded in
+`src/canary_scan/bundled/VERSIONS.txt`.
+
+---
+
 ## License
 
 Apache-2.0. Bundled third-party scripts (`pdfid`, `pdf-parser`, `rtfdump`) are BSD 2-Clause — see `src/canary_scan/bundled/README.md`.

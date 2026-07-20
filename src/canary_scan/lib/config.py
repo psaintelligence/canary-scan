@@ -175,6 +175,15 @@ CATEGORY_INFO = {
 
 CANARY_CATEGORIES = set(CATEGORY_INFO.keys())
 
+# URL path fragments that indicate a known canarytoken / web-beacon provider.
+# When a scanned URL matches one of these substrings on its path, the URL is
+# truncated to the parent path (the unique token segment is stripped) before
+# being recorded as evidence. This keeps the report stable across different
+# canarytoken instances of the same provider.
+CANARYTOKEN_PATH_PATTERNS: tuple[str, ...] = (
+    "/QXUGUTAENT",  # Thinkst Canarytokens (legacy path layout)
+)
+
 
 DEPS: dict[str, tuple[str, str, str, str]] = {
     "exiftool": ("required", "[apt|rpm|apk] libimage-exiftool-perl", "exiftool", "Metadata extraction and analysis"),

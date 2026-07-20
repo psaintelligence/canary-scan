@@ -1,4 +1,10 @@
-"""Safety checks: assert the data-source directory is mounted read-only."""
+"""Safety checks: warn when the data-source directory is not mounted read-only.
+
+This stage is advisory, not a gate. A read-only mount is strongly recommended
+for evidence integrity but is not required — practitioners who have already
+snapshotted the data may proceed on a writable tree at their own risk. See
+ADR-004 for rationale.
+"""
 
 from __future__ import annotations
 

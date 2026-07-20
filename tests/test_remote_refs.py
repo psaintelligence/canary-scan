@@ -302,7 +302,7 @@ def test_thinkst_canarytoken_cleaning_and_detection():
     text = "Here is a thinkst token: http://canarytokens.com/terms/QXUGUTAENT) and normal: http://example.com/normal"
     findings = _scan_raw_text(rec, text, "test-tool", "test-sub", Severity.MEDIUM, 0.7)
 
-    thinkst_findings = [f for f in findings if f.subcategory == "thinkst_canarytoken"]
+    thinkst_findings = [f for f in findings if f.subcategory == "canarytoken"]
     normal_findings = [f for f in findings if f.subcategory == "test-sub"]
 
     assert len(thinkst_findings) == 1
@@ -337,7 +337,7 @@ def test_pdf_in_memory_stream_decompressor(tmp_path):
 
     findings = c_pdf(rec, logger)
 
-    thinkst_findings = [f for f in findings if f.subcategory == "thinkst_canarytoken"]
+    thinkst_findings = [f for f in findings if f.subcategory == "canarytoken"]
     assert len(thinkst_findings) == 1
     assert thinkst_findings[0].evidence == "http://canarytokens.com/pdfstream/"
     assert thinkst_findings[0].severity == "critical"
@@ -360,6 +360,6 @@ def test_ooxml_global_zip_member_scan(tmp_path):
 
     findings = c_ooxml(rec, logger)
 
-    thinkst_findings = [f for f in findings if f.subcategory == "thinkst_canarytoken"]
+    thinkst_findings = [f for f in findings if f.subcategory == "canarytoken"]
     assert len(thinkst_findings) == 1
     assert thinkst_findings[0].evidence == "http://canarytokens.com/theme/"

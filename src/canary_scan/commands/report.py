@@ -1,4 +1,4 @@
-"""CLI command handler for rebuilding reports from stage artifacts."""
+"""CLI command handler for rebuilding reports from stage artefacts."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def report(
     denylist: Path | None = typer.Option(None, "--denylist", help="Path to JSON or text denylist rules."),
 ) -> None:
     """
-    This command reads the intermediate artifacts from the output directory (e.g., inventory, metadata,
+    This command reads the intermediate artefacts from the output directory (e.g., inventory, metadata,
     remote-refs), filters findings by the severity threshold, and merges/overwrites the final report
     files (JSON, CSV, SARIF). Useful for re-rendering reports with a different format or severity threshold
     without scanning the data-source again.

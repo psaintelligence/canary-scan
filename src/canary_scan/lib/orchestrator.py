@@ -78,11 +78,12 @@ class StageRegistry:
         return cls._stages.get(name)
 
 
-def _load_inventory(outdir: Path) -> list[FileRecord]:
+def _load_inventory(outdir: Path, logger: RunLogger | None = None) -> list[FileRecord]:
     path = outdir / STAGE_ARTEFACTS["inventory"]
     if not path.exists():
         return []
     records: list[FileRecord] = []
+    skipped = 0
     for f in read_jsonl(path):
         if f.extras:
             records.append(
@@ -96,17 +97,26 @@ def _load_inventory(outdir: Path) -> list[FileRecord]:
                     extension=f.extras.get("extension", ""),
                 )
             )
+        else:
+            skipped += 1
+    if skipped and logger:
+        logger.log(f"orchestrator: skipped {skipped} inventory record(s) with empty extras")
     return records
 
 
-def _load_metadata(outdir: Path) -> dict[str, dict]:
+def _load_metadata(outdir: Path, logger: RunLogger | None = None) -> dict[str, dict]:
     path = outdir / STAGE_ARTEFACTS["metadata"]
     if not path.exists():
         return {}
     result: dict[str, dict] = {}
+    skipped = 0
     for f in read_jsonl(path):
         if f.extras:
             result[f.file] = f.extras
+        else:
+            skipped += 1
+    if skipped and logger:
+        logger.log(f"orchestrator: skipped {skipped} metadata record(s) with empty extras")
     return result
 
 
@@ -125,7 +135,7 @@ class InventoryStage(Stage):
         ctx.inventory.extend(records)
 
     def skip(self, ctx: PipelineContext) -> None:
-        ctx.inventory.extend(_load_inventory(ctx.outdir))
+        ctx.inventory.extend(_load_inventory(ctx.outdir, ctx.logger))
 
 
 @StageRegistry.register("metadata")
@@ -134,12 +144,12 @@ class MetadataStage(Stage):
         from canary_scan.scanners.metadata import run as run_metadata
 
         if not ctx.inventory:
-            ctx.inventory.extend(_load_inventory(ctx.outdir))
+            ctx.inventory.extend(_load_inventory(ctx.outdir, ctx.logger))
         meta, _ = run_metadata(ctx.inventory, ctx.outdir, ctx.logger, ctx.workers)
         ctx.metadata.update(meta)
 
     def skip(self, ctx: PipelineContext) -> None:
-        ctx.metadata.update(_load_metadata(ctx.outdir))
+        ctx.metadata.update(_load_metadata(ctx.outdir, ctx.logger))
 
 
 @StageRegistry.register("remote-refs")
@@ -148,7 +158,7 @@ class RemoteRefsStage(Stage):
         from canary_scan.scanners.remote_refs import run as run_remote_refs
 
         if not ctx.inventory:
-            ctx.inventory.extend(_load_inventory(ctx.outdir))
+            ctx.inventory.extend(_load_inventory(ctx.outdir, ctx.logger))
         run_remote_refs(
             ctx.inventory,
             ctx.outdir,
@@ -165,7 +175,7 @@ class EmbeddedStage(Stage):
         from canary_scan.scanners.embedded import run as run_embedded
 
         if not ctx.inventory:
-            ctx.inventory.extend(_load_inventory(ctx.outdir))
+            ctx.inventory.extend(_load_inventory(ctx.outdir, ctx.logger))
         run_embedded(ctx.inventory, ctx.outdir, ctx.logger, ctx.workers, ctx.args.get("keep_tmp", False))
 
 
@@ -175,7 +185,7 @@ class StegoStage(Stage):
         from canary_scan.scanners.stego import run as run_stego
 
         if not ctx.inventory:
-            ctx.inventory.extend(_load_inventory(ctx.outdir))
+            ctx.inventory.extend(_load_inventory(ctx.outdir, ctx.logger))
         run_stego(ctx.inventory, ctx.outdir, ctx.logger, ctx.args.get("crack_steg"), ctx.workers)
 
 
@@ -185,9 +195,9 @@ class UniquenessStage(Stage):
         from canary_scan.scanners.uniqueness import run as run_uniqueness
 
         if not ctx.inventory:
-            ctx.inventory.extend(_load_inventory(ctx.outdir))
+            ctx.inventory.extend(_load_inventory(ctx.outdir, ctx.logger))
         if not ctx.metadata:
-            ctx.metadata.update(_load_metadata(ctx.outdir))
+            ctx.metadata.update(_load_metadata(ctx.outdir, ctx.logger))
         run_uniqueness(
             ctx.inventory,
             ctx.metadata,

@@ -119,9 +119,10 @@ def scan_image(rec: FileRecord, logger: RunLogger, crack_steg: str | None) -> li
                 ["exiftool", "-b", "-ThumbnailImage", "--", rec.path],
                 logger=logger,
                 timeout=30,
+                binary=True,
             )
-            if thumb_result.returncode == 0 and thumb_result.stdout:
-                thumb_bytes = thumb_result.stdout
+            if thumb_result.returncode == 0 and thumb_result.stdout_bytes:
+                thumb_bytes = thumb_result.stdout_bytes
                 import io
 
                 from PIL import Image

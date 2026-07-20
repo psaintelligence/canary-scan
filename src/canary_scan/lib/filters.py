@@ -10,6 +10,10 @@ from urllib.parse import urlparse
 from canary_scan.lib.config import Severity
 from canary_scan.lib.models import Finding
 
+# Domains that are common schema/namespace authorities and very unlikely to host
+# canary callbacks. Note: hosting providers (github.com, google.com, etc.) are
+# intentionally excluded — they are trivially usable for canarytokens and
+# tracker callbacks. Users can extend via --allowlist.
 BENIGN_DOMAINS = {
     "w3.org",
     "xmlsoap.org",
@@ -18,17 +22,7 @@ BENIGN_DOMAINS = {
     "purl.org",
     "ietf.org",
     "schema.org",
-    "adobe.com",
-    "microsoft.com",
-    "windows.com",
-    "google.com",
-    "googleapis.com",
-    "apple.com",
-    "oracle.com",
-    "mozilla.org",
     "xml.org",
-    "w3schools.com",
-    "github.com",
 }
 
 SEVERITY_RANK_ORDER = ["critical", "high", "medium", "low", "info"]

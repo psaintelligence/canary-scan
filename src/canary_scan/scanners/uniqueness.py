@@ -251,6 +251,11 @@ def _diff_pdfs(
             )
         )
     else:
+        # Render the first page of each near-duplicate PDF to PNG and compare
+        # both by hash and — when ImageMagick `compare` is available — by actual
+        # pixel difference count. The pixel-diff evidence is what surfaces
+        # tracking dots / yellow-dot watermarks that survive hash-identical
+        # rendering pipelines.
         png_hashes = []
         png_paths = []
         try:
@@ -268,11 +273,25 @@ def _diff_pdfs(
                 else:
                     png_hashes.append("")
             if len(set(png_hashes)) > 1:
+                # Try to quantify the visual difference with ImageMagick.
+                ae_evidence = ""
+                if len(png_paths) >= 2:
+                    cmp = safe_subprocess(
+                        ["compare", "-metric", "AE", str(png_paths[0]), str(png_paths[1]), "/dev/null"],
+                        logger=logger,
+                        timeout=30,
+                    )
+                    if cmp.returncode in (0, 1) and cmp.stderr.strip():
+                        try:
+                            ae = int(cmp.stderr.strip())
+                            ae_evidence = f" (pixel diff vs first member: {ae} pixels)"
+                        except ValueError:
+                            pass
                 diffs.append(
                     Diff(
                         "pdf_pixel_diff",
                         "rendered PDF pages differ visually (potential yellow dots or per-recipient watermark)",
-                        "mutool draw page diff",
+                        "mutool draw page diff" + ae_evidence,
                     )
                 )
         finally:
@@ -363,18 +382,35 @@ def _diff_images(members: list[FileRecord], metadata: dict[str, dict], logger: R
         sizes.add(f"{w}x{h}")
     if len(sizes) > 1:
         diffs.append(Diff("image_dimensions", "image dimensions differ among near-duplicates", str(sizes)))
-    result = safe_subprocess(
-        ["compare", "-metric", "AE", members[0].path, members[1].path, "/dev/null"],
-        logger=logger,
-        timeout=30,
-    )
-    if result.returncode in (0, 1) and result.stderr.strip():
-        try:
-            ae = int(result.stderr.strip())
-            if 0 < ae < 1000:
-                diffs.append(Diff("pixel_diff", f"images differ by {ae} pixels (subtle watermark?)", str(ae)))
-        except ValueError:
-            pass
+    # Pairwise pixel comparison across all members (not just first two) so
+    # larger clusters surface a difference between any two near-duplicates.
+    max_ae = 0
+    max_pair: tuple[int, int] | None = None
+    n = len(members)
+    for i in range(n):
+        for j in range(i + 1, n):
+            result = safe_subprocess(
+                ["compare", "-metric", "AE", members[i].path, members[j].path, "/dev/null"],
+                logger=logger,
+                timeout=30,
+            )
+            if result.returncode in (0, 1) and result.stderr.strip():
+                try:
+                    ae = int(result.stderr.strip())
+                    if ae > max_ae:
+                        max_ae = ae
+                        max_pair = (i, j)
+                except ValueError:
+                    pass
+    if 0 < max_ae < 1000 and max_pair is not None:
+        i, j = max_pair
+        diffs.append(
+            Diff(
+                "pixel_diff",
+                f"images differ by {max_ae} pixels (members {i} vs {j}; subtle watermark?)",
+                str(max_ae),
+            )
+        )
     return diffs
 
 

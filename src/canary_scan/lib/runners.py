@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
+import fcntl
 import subprocess
 import threading
 import time
@@ -17,9 +19,20 @@ class CommandResult:
     stderr: str
     timed_out: bool = False
     file_not_found: bool = False
+    stdout_bytes: bytes = b""
+    stderr_bytes: bytes = b""
 
 
 class RunLogger:
+    """Append-only logger safe for use across a ProcessPoolExecutor.
+
+    Each worker process inherits the same log path. Workers re-open the file
+    in append mode on first ``log()`` call and take an inter-process
+    ``fcntl.flock`` (LOCK_EX | LOCK_NB, falling back to blocking LOCK_EX) on
+    every write so concurrent appends from sibling workers do not interleave
+    or corrupt lines.
+    """
+
     def __init__(self, log_path: Path) -> None:
         self.log_path = log_path
         self._fh = None
@@ -36,8 +49,16 @@ class RunLogger:
             self.open()
         with self._lock:
             ts = time.strftime("%Y-%m-%dT%H:%M:%S")
-            self._fh.write(f"[{ts}] {message}\n")
-            self._fh.flush()
+            line = f"[{ts}] {message}\n"
+            # Inter-process lock around the write so concurrent workers
+            # appending to the same file do not interleave partial lines.
+            try:
+                fcntl.flock(self._fh.fileno(), fcntl.LOCK_EX)
+                self._fh.write(line)
+                self._fh.flush()
+            finally:
+                with contextlib.suppress(OSError):
+                    fcntl.flock(self._fh.fileno(), fcntl.LOCK_UN)
 
     def close(self) -> None:
         with self._lock:
@@ -70,7 +91,16 @@ def safe_subprocess(
     cwd: str | None = None,
     env: dict | None = None,
     stdin_data: str | None = None,
+    binary: bool = False,
 ) -> CommandResult:
+    """Run a subprocess with logging and timeout handling.
+
+    When ``binary=True`` the stdout/stderr payloads are preserved as bytes
+    in ``stdout_bytes`` / ``stderr_bytes`` and the text fields are set to
+    empty strings. This is required for commands whose output is itself
+    binary data (e.g. ``exiftool -b -ThumbnailImage``); decoding such output
+    as UTF-8 silently corrupts the bytes.
+    """
     cmd_str = " ".join(cmd)
     if logger:
         logger.log(f"RUN: {cmd_str}")
@@ -79,12 +109,27 @@ def safe_subprocess(
         proc = subprocess.run(
             list(cmd),
             capture_output=True,
-            text=True,
+            text=not binary,
             timeout=timeout,
             cwd=cwd,
             env=env,
             input=stdin_data,
         )
+        if binary:
+            stdout_b = proc.stdout or b""
+            stderr_b = proc.stderr or b""
+            if logger:
+                logger.log(f"RC={proc.returncode}")
+                logger.log(f"STDOUT[binary]: {len(stdout_b)} bytes")
+                if stderr_b:
+                    logger.log(f"STDERR[binary]: {len(stderr_b)} bytes")
+            return CommandResult(
+                returncode=proc.returncode,
+                stdout="",
+                stderr="",
+                stdout_bytes=stdout_b,
+                stderr_bytes=stderr_b,
+            )
         if logger:
             logger.log(f"RC={proc.returncode}")
             if proc.stdout:

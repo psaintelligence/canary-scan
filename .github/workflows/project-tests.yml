@@ -38,7 +38,11 @@ jobs:
             ripgrep \
             unzip \
             p7zip-full \
-            file
+            file \
+            imagemagick \
+            steghide \
+            pngcheck \
+            libzbar0
 
       - name: Sync dependencies
         run: |

@@ -83,7 +83,13 @@ def _process_record(rec: FileRecord, logger: RunLogger) -> tuple[str, dict | Non
                 objects = re.split(r"(?m)^obj\s+", stdout)
                 form_fields = []
 
-                val_pattern = r"\s+(?:\((.*?)\)|<([^>]+)>|(\/[A-Za-z0-9_]+)|(\S+))"
+                # PDF form-field object values are tightly bounded by the
+                # next PDF token boundary. The previous `(\S+)` alternative
+                # was greedy across whitespace-stripped tokens and could
+                # swallow trailing keys on the same line. Restrict the
+                # catch-all to a non-whitespace run that stops at `>>`,
+                # `/`, `(`, or `<`.
+                val_pattern = r"\s+(?:\((.*?)\)|<([^>]+)>|(\/[A-Za-z0-9_]+)|([^\s/><(]+))"
                 t_re = re.compile(r"/T" + val_pattern)
                 tu_re = re.compile(r"/TU" + val_pattern)
                 v_re = re.compile(r"/V" + val_pattern)

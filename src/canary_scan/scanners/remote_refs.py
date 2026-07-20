@@ -13,7 +13,7 @@ import zlib
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-from canary_scan.lib.config import Bucket, Severity
+from canary_scan.lib.config import CANARYTOKEN_PATH_PATTERNS, Bucket, Severity
 from canary_scan.lib.io import write_jsonl
 from canary_scan.lib.models import FileRecord, Finding, make_info_finding
 from canary_scan.lib.runners import RunLogger, safe_subprocess
@@ -26,15 +26,16 @@ IP_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 
 def _clean_url(url: str) -> tuple[str, bool]:
     cleaned = url.strip().strip(")").strip(">").strip("<").strip('"').strip("'")
-    thinkst_pattern = "/QXUGUTAENT"
-    is_thinkst = False
-    if thinkst_pattern in cleaned:
-        is_thinkst = True
-        idx = cleaned.find(thinkst_pattern)
-        cleaned = cleaned[:idx].strip()
-        if not cleaned.endswith("/"):
-            cleaned += "/"
-    return cleaned, is_thinkst
+    is_canary = False
+    for pattern in CANARYTOKEN_PATH_PATTERNS:
+        if pattern in cleaned:
+            is_canary = True
+            idx = cleaned.find(pattern)
+            cleaned = cleaned[:idx].strip()
+            if not cleaned.endswith("/"):
+                cleaned += "/"
+            break
+    return cleaned, is_canary
 
 
 def _scan_raw_text(
@@ -49,17 +50,17 @@ def _scan_raw_text(
     findings = []
     # 1. HTTP/S URLs
     for url in URL_RE.findall(text):
-        cleaned, is_thinkst = _clean_url(url)
+        cleaned, is_canary = _clean_url(url)
         if not cleaned:
             continue
-        if is_thinkst:
+        if is_canary:
             findings.append(
                 Finding.from_file_record(
                     rec,
                     "remote-refs",
                     "active_url",
-                    "thinkst_canarytoken",
-                    f"Thinkst Canarytoken detected: {cleaned}",
+                    "canarytoken",
+                    f"Canarytoken detected: {cleaned}",
                     cleaned,
                     tool,
                     Severity.CRITICAL,
@@ -118,10 +119,11 @@ def _process_remote_refs_record(
     logger: RunLogger,
     max_archive_depth: int,
     enable_specialized: bool,
+    extract_root: Path | None = None,
 ) -> list[Finding]:
     bucket = Bucket(rec.bucket)
     try:
-        return route(rec, bucket, logger, max_archive_depth, enable_specialized, depth=0)
+        return route(rec, bucket, logger, max_archive_depth, enable_specialized, depth=0, extract_root=extract_root)
     except Exception as e:
         logger.log(f"Stage remote-refs: error on {rec.path}: {e}")
         return [make_info_finding(rec, "remote-refs", f"remote-refs stage error: {e}")]
@@ -138,10 +140,14 @@ def run(
     from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn, TimeRemainingColumn
 
     findings: list[Finding] = []
+    extract_root = outdir / "canary-scan-extract"
+    extract_root.mkdir(parents=True, exist_ok=True)
 
     with ProcessPoolExecutor(max_workers=workers) as executor:
         futures = [
-            executor.submit(_process_remote_refs_record, rec, logger, max_archive_depth, enable_specialized)
+            executor.submit(
+                _process_remote_refs_record, rec, logger, max_archive_depth, enable_specialized, extract_root
+            )
             for rec in records
         ]
         with Progress(
@@ -171,6 +177,7 @@ def route(
     max_depth: int,
     enable_specialized: bool,
     depth: int,
+    extract_root: Path | None = None,
 ) -> list[Finding]:
     if depth > max_depth:
         return [make_info_finding(rec, "remote-refs", f"max archive depth {max_depth} exceeded, not recursing")]
@@ -198,7 +205,7 @@ def route(
         case Bucket.XML:
             return c_xml(rec)
         case Bucket.ARCHIVE:
-            return c_archive(rec, logger, max_depth, enable_specialized, depth)
+            return c_archive(rec, logger, max_depth, enable_specialized, depth, extract_root)
         case _:
             return []
 
@@ -1080,6 +1087,9 @@ def c_csv(rec: FileRecord) -> list[Finding]:
     try:
         import csv
 
+        p = Path(rec.path)
+        if p.stat().st_size > 50 * 1024 * 1024:
+            return findings
         with open(rec.path, encoding="utf-8", errors="replace", newline="") as f:
             reader = csv.reader(f)
             for row in reader:
@@ -1164,6 +1174,7 @@ def c_archive(
     max_depth: int,
     enable_specialized: bool,
     depth: int,
+    extract_root: Path | None = None,
 ) -> list[Finding]:
     findings: list[Finding] = []
 
@@ -1205,8 +1216,46 @@ def c_archive(
                 )
                 return findings
 
-    members = _list_archive_members(rec.path, logger)
+    # Always extract via _extract_archive so non-ZIP/Tar formats (7z, RAR,
+    # ISO, CAB, EPUB, CHM) handled by the `7z` binary are also scanned.
+    # Skip the member-list optimisation for those formats and let the
+    # extractor populate the destination directly.
+    members: list[str] = []
+    if rec.path.lower().endswith((".zip", ".tar", ".tar.gz", ".tgz")) or _is_zip(rec.path):
+        members = _list_archive_members(rec.path, logger)
     if not members:
+        # Fall through to extraction for any archive type, including ones
+        # _list_archive_members does not understand (7z, rar, iso, ...).
+        # We still emit the nested-archive info finding below if extraction
+        # yields any members.
+        pass
+
+    # Extract into the outdir tree (NOT alongside the source file). Writing
+    # into a read-only datasource mount would either fail or violate the
+    # tool's no-mutation guarantee (architecture principle #2).
+    if extract_root is None:
+        extract_root = Path(".canary-scan") / "canary-scan-extract"
+    tmp_root = extract_root / f"{Path(rec.path).name}-d{depth}-{Path(rec.path).stat().st_size}"
+    extracted = _extract_archive(rec.path, tmp_root, logger)
+    if not extracted:
+        # Nothing extracted: maybe encrypted, unsupported, or empty. If we
+        # never had a member list, return findings gathered so far (e.g.
+        # encrypted-zip notice). Otherwise emit the nested info finding.
+        if members:
+            findings.append(
+                Finding.from_file_record(
+                    rec,
+                    "remote-refs",
+                    "archive_nested",
+                    "archive",
+                    f"Archive contains {len(members)} members requiring recursion",
+                    str(members[:10]),
+                    "canary-scan",
+                    Severity.INFO,
+                    0.5,
+                    extras={"member_count": len(members), "depth": depth},
+                )
+            )
         return findings
     findings.append(
         Finding.from_file_record(
@@ -1214,18 +1263,16 @@ def c_archive(
             "remote-refs",
             "archive_nested",
             "archive",
-            f"Archive contains {len(members)} members requiring recursion",
-            str(members[:10]),
+            f"Archive contains {len(extracted)} members requiring recursion",
+            str([Path(p).name for p in extracted[:10]]),
             "canary-scan",
             Severity.INFO,
             0.5,
-            extras={"member_count": len(members), "depth": depth},
+            extras={"member_count": len(extracted), "depth": depth},
         )
     )
     if depth >= max_depth:
         return findings
-    tmp_root = Path(rec.path).parent / f".canary-scan-extract-{Path(rec.path).name}-{depth}"
-    extracted = _extract_archive(rec.path, tmp_root, logger)
     from canary_scan.lib.type_detect import detect_bucket, extension_of
 
     for mpath in extracted:
@@ -1241,7 +1288,7 @@ def c_archive(
             bucket=bucket.value,
             extension=ext,
         )
-        sub_findings = route(sub_rec, bucket, logger, max_depth, enable_specialized, depth + 1)
+        sub_findings = route(sub_rec, bucket, logger, max_depth, enable_specialized, depth + 1, extract_root)
         for sf in sub_findings:
             sf.file = f"{rec.path}!/{mpath}"
             findings.append(sf)

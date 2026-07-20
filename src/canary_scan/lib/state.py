@@ -112,7 +112,7 @@ class StateManager:
 
     def acquire_lock(self) -> None:
         self.outdir.mkdir(parents=True, exist_ok=True)
-        self._lock_fh = open(self.lock_path, "w")
+        self._lock_fh = open(self.lock_path, "a")
         try:
             fcntl.flock(self._lock_fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
@@ -122,6 +122,8 @@ class StateManager:
                 f"Lock file: {self.lock_path}\n"
             )
             sys.exit(5)
+        self._lock_fh.seek(0, os.SEEK_SET)
+        self._lock_fh.truncate()
         self._lock_fh.write(f"pid={os.getpid()}\n")
         self._lock_fh.flush()
 
